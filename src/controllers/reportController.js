@@ -1,9 +1,3 @@
-const { performETL } = require('../utils/etl');
-const { generatePDFReport } = require('../utils/pdfGenerator');
-const { generateCSVReport } = require('../utils/csvGenerator'); // Optional
-const { sendAlertEmail } = require('../utils/emailService');
-
-// API to generate report and send alerts
 const generateReport = async (req, res) => {
     try {
         // Perform ETL to get metrics
@@ -35,5 +29,3 @@ const generateReport = async (req, res) => {
         res.status(500).send('An error occurred while generating the report.');
     }
 };
-
-module.exports = { generateReport };
