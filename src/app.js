@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const reportRoutes=require('./routes/reportRoutes.js')
 const marketingNdCrmRoutes = require('./routes/marketingNdCrmRoutes.js');
 
 
