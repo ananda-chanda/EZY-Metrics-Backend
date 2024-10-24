@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 // Function to send email alerts
-const sendAlertEmail = (condition) => {
+const sendAlertEmail = async (condition) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -12,18 +12,17 @@ const sendAlertEmail = (condition) => {
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: 'sikly.dev@gmail.com',  // Replace with the recipient's email
+        to: 'sikly.dev@gmail.com', // Replace with the recipient's email
         subject: 'EzyMetrics Alert',
         text: `Alert: ${condition}`
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error sending email:', error);
-        } else {
-            console.log('Email sent:', info.response);
-        }
-    });
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
 };
 
 module.exports = { sendAlertEmail };

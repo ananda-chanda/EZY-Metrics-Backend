@@ -2,31 +2,37 @@ const { performETL } = require('../utils/etl');
 const { generatePDFReport } = require('../utils/pdfGenerator');
 const { generateCSVReport } = require('../utils/csvGenerator'); // Optional
 const { sendAlertEmail } = require('../utils/emailService');
-const path = require('path');
 
 // API to generate report and send alerts
 const generateReport = async (req, res) => {
-    // Perform ETL to get metrics
-    const metrics = await performETL();
+    try {
+        // Perform ETL to get metrics
+        const metrics = await performETL();
 
-    // Generate PDF report
-    const pdfPath = path.join(__dirname, '..', 'reports', 'metrics_report.pdf');
-    generatePDFReport(metrics, pdfPath);
+        // Send email alert if the total budget exceeds a threshold
+        if (metrics.totalBudget > 10000) {
+            await sendAlertEmail(`Total budget exceeded the threshold: $${metrics.totalBudget}`);
+        }
 
-    // Optionally generate CSV report
-    const csvPath = path.join(__dirname, '..', 'reports', 'metrics_report.csv');
-    await generateCSVReport(metrics, csvPath);
+        // Determine the format from query parameters
+        const format = req.query.format || 'pdf'; // Default to PDF if not specified
 
-    // Send email alert if the total budget exceeds a threshold
-    if (metrics.totalBudget > 10000) {
-        sendAlertEmail(`Total budget exceeded the threshold: $${metrics.totalBudget}`);
-    }
-
-    // Provide download options
-    if (req.query.format === 'csv') {
-        res.download(csvPath);
-    } else {
-        res.download(pdfPath); // Default to PDF
+        if (format === 'csv') {
+            // Generate CSV report in memory
+            const csvBuffer = await generateCSVReport(metrics);
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=metrics_report.csv');
+            res.send(csvBuffer);
+        } else {
+            // Generate PDF report in memory
+            const pdfBuffer = await generatePDFReport(metrics);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename=metrics_report.pdf');
+            res.send(pdfBuffer);
+        }
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).send('An error occurred while generating the report.');
     }
 };
 
